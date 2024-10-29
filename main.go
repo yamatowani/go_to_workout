@@ -24,8 +24,7 @@ func addLog(exercise string, weight float64, sets int, reps []int, date string) 
 		fmt.Println("Error parsing date:", err)
 		return
 	}
-	fmt.Println("API Token:", apiToken)
-fmt.Println("Database ID:", databaseID)
+
 	payload := map[string]interface{}{
 		"parent": map[string]string{
 			"database_id": databaseID,
