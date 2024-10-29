@@ -1,13 +1,22 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
+	"net/http"
 	"time"
+	"os"
 )
 
-var log = "workout_log.json"
+const (
+	notionAPIURL    = "https://api.notion.com/v1/pages"
+	notionAPIVersion = "2022-06-28"
+)
+
+var apiToken = os.Getenv("API_TOKEN")
+var databaseID = os.Getenv("DATABASE_ID")
+
 
 func addLog(exercise string, weight float64, sets int, reps []int, date string) {
 	parsedDate, err := time.Parse("2006-01-02", date)
@@ -15,41 +24,68 @@ func addLog(exercise string, weight float64, sets int, reps []int, date string) 
 		fmt.Println("Error parsing date:", err)
 		return
 	}
-
-	workout := Workout{
-		Exercise: exercise,
-		Weight:   weight,
-		Sets:     sets,
-		Reps:     reps,
-		Date:     parsedDate,
+	fmt.Println("API Token:", apiToken)
+fmt.Println("Database ID:", databaseID)
+	payload := map[string]interface{}{
+		"parent": map[string]string{
+			"database_id": databaseID,
+		},
+		"properties": map[string]interface{}{
+			"Exercise": map[string]interface{}{
+				"title": []map[string]interface{}{
+					{
+						"text": map[string]string{"content": exercise},
+					},
+				},
+			},
+			"Weight": map[string]interface{}{
+				"number": weight,
+			},
+			"Sets": map[string]interface{}{
+				"number": sets,
+			},
+			"Reps": map[string]interface{}{
+				"rich_text": []map[string]interface{}{
+					{
+						"text": map[string]string{"content": fmt.Sprint(reps)},
+					},
+				},
+			},
+			"Date": map[string]interface{}{
+				"date": map[string]interface{}{
+					"start": parsedDate.Format("2006-01-02"),
+				},
+			},
+		},
 	}
 
-	workouts := loadLogs()
-	workouts = append(workouts, workout)
-
-	file, err := os.Create(log)
+	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Println("Error creating log file:", err)
+		fmt.Println("Error encoding JSON:", err)
 		return
 	}
-	defer file.Close()
 
-	if err := json.NewEncoder(file).Encode(workouts); err != nil {
-		fmt.Println("Error encoding to JSON:", err)
+	req, err := http.NewRequest("POST", notionAPIURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
 		return
 	}
+	
+	req.Header.Set("Authorization", "Bearer "+apiToken)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Notion-Version", notionAPIVersion)
 
-	fmt.Println("Workout logged successfully")
-}
-
-func loadLogs() []Workout {
-	var workouts []Workout
-	file, err := os.Open(log)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
-		return workouts
+		fmt.Println("Error sending request to Notion:", err)
+		return
 	}
-	defer file.Close()
+	defer resp.Body.Close()
 
-	json.NewDecoder(file).Decode(&workouts)
-	return workouts
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Failed to add workout log to Notion:", resp.Status)
+	} else {
+		fmt.Println("Workout logged successfully to Notion")
+	}
 }
