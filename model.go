@@ -1,8 +1,7 @@
 package main
 
-import (
-	"time"
-)
+import "time"
+
 
 type Workout struct {
 	Exercise string
