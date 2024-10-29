@@ -34,7 +34,7 @@ func main() {
 	logCmd.Flags().Float64("weight", 0, "Weight in kg")
 	logCmd.Flags().Int("sets", 0, "Number of sets")
 	logCmd.Flags().String("reps", "", "Comma-separated reps per set (e.g., 8,8,6)")
-	logCmd.Flags().String("sets", "", "Date of the workout (YYYY-MM-DD)")
+	logCmd.Flags().String("date", "", "Date of the workout (YYYY-MM-DD)")
 
 	rootCmd.AddCommand(logCmd)
 	rootCmd.Execute()
