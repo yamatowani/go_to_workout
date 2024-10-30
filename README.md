@@ -17,8 +17,8 @@ Go to Workout CLIは、筋トレのログを記録するためのCLIアプリケ
 このアプリケーションを使用するには、Go言語がインストールされている必要があります。以下のコマンドでリポジトリをクローンして、依存関係をインストールします。
 
 ```bash
-git clone https://github.com/yourusername/workout-tracker-cli.git
-cd workout-tracker-cli
+git clone https://github.com/yamatowani/go_to_workout_cli.git
+cd go_to_workout_cli
 go mod tidy
 ```
 
